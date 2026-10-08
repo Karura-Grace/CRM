@@ -1,0 +1,23 @@
+services:
+  crm:
+    build: .
+    restart: unless-stopped
+    ports: ["3000:3000"]
+    env_file: .env
+    environment:
+      DATABASE_URL: file:/data/pac-crm.db
+    volumes:
+      - crm-data:/data
+  # Runs the daily job at 02:00 Africa/Nairobi using the same image and database volume.
+  cron:
+    build: .
+    restart: unless-stopped
+    env_file: .env
+    environment:
+      DATABASE_URL: file:/data/pac-crm.db
+      TZ: Africa/Nairobi
+    volumes:
+      - crm-data:/data
+    command: ["sh", "-c", "while true; do now=$$(date +%H%M); if [ \"$$now\" = \"0200\" ]; then npm run cron; sleep 61; fi; sleep 30; done"]
+volumes:
+  crm-data:
